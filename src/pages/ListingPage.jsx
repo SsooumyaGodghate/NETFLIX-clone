@@ -1,0 +1,68 @@
+import React, { useState, useEffect } from "react";
+
+import tmdb from "../services/tmdb.js";
+import MovieCard from "../components/MovieCard.jsx";
+import { motion } from "motion/react";
+
+const ListingPage = ({ type }) => {
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMovies();
+  }, [type]);
+
+  const fetchMovies = async () => {
+    setLoading(true);
+    try {
+      let res;
+      if (type === "Anime") {
+        res = await tmdb.getAnime();
+      } else if (type === "TV Show") {
+        res = await tmdb.getPopularTvShows();
+      } else {
+        res = await tmdb.getTopRated();
+      }
+      setMovies(res.data.results);
+    } catch (err) {
+      console.error("Failed to fetch movies");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="pt-32 px-4 md:px-12 min-h-screen">
+      <div className="flex items-center gap-6 mb-10">
+        <h1 className="text-3xl md:text-5xl font-bold">{type}s</h1>
+        <div className="flex items-center gap-4 bg-black border border-gray-600 px-4 py-1 text-sm font-medium cursor-pointer hover:bg-gray-800 transition-colors">
+          Genres{" "}
+          <span className="border-t-4 border-x-4 border-x-transparent border-t-white" />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20">Loading...</div>
+      ) : movies.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-y-10 gap-x-4">
+          {movies.map((movie, i) => (
+            <motion.div
+              key={movie.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <MovieCard movie={movie} />
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 text-gray-500">
+          No {type.toLowerCase()}s found.
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ListingPage;
